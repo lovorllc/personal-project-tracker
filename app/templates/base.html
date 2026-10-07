@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="{{ language }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111310">
+  <title>{% block title %}{{ site_copy.site_title }}{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', path='/site.css') }}">
+</head>
+<body>
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="wrap site-wrap">
+  {% macro page_link(page) %}
+    {% if page.is_dropdown %}
+    <details class="nav-dropdown">
+      <summary class="tab-btn">{{ page.title }} <span aria-hidden="true">▾</span></summary>
+      <div class="dropdown-menu">
+        {% if page.body %}<a href="/section/{{ page.slug }}">{{ page.title }}</a>{% endif %}
+        {% for child in page.children %}{{ page_link(child) }}{% endfor %}
+        {% for project in page.projects %}<a class="nav-project-link" href="/project/{{ project.slug }}">{{ project.title }}</a>{% endfor %}
+      </div>
+    </details>
+    {% else %}<a href="/section/{{ page.slug }}" class="tab-btn">{{ page.title }}</a>{% endif %}
+  {% endmacro %}
+  <header class="site-header">
+    <div class="header-topline">
+      <form class="site-search" action="/search" method="get" role="search">
+        <label class="sr-only" for="project-search">{{ site_copy.search_button }}</label>
+        <input id="project-search" name="q" type="search" value="{{ search_query or '' }}" placeholder="{{ site_copy.search_placeholder }}">
+        <button type="submit" aria-label="{{ site_copy.search_button }}">⌕</button>
+      </form>
+      <a class="wordmark" href="/" aria-label="{{ site_copy.home_link }}">LOVRO.ME</a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation" aria-label="{{ site_copy.menu_open }}" data-label-open="{{ site_copy.menu_open }}" data-label-close="{{ site_copy.menu_close }}">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <nav class="tabs" id="primary-navigation" aria-label="{{ site_copy.navigation_label }}">
+      <a href="/" class="tab-btn {% if request.url.path == '/' %}active{% endif %}">{{ site_copy.home_label }}</a>
+      {% for section in sections %}{{ page_link(section) }}{% endfor %}
+      <a href="/about" class="tab-btn about-nav {% if request.url.path == '/about' %}active{% endif %}">{{ site_copy.about_label }}</a>
+    </nav>
+  </header>
+  <main class="page-content">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site-footer" aria-label="{{ site_copy.footer_text }}"><span>{{ site_copy.footer_text }}</span><span aria-hidden="true">{{ site_copy.footer_text }}</span></footer>
+  </div>
+  <button class="language-toggle" type="button" data-language-toggle data-target-language="{{ 'hr' if language == 'en' else 'en' }}" aria-label="{{ site_copy.switch_to_hr if language == 'en' else site_copy.switch_to_en }}">{{ 'HR' if language == 'en' else 'EN' }}</button>
+  <script src="{{ url_for('static', path='/site.js') }}" defer></script>
+</body>
+</html>

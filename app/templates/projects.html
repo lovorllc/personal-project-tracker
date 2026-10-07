@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }} / LOVRO.ME{% endblock %}
+{% block content %}
+<section class="page-heading pixel-box">
+  <p class="eyebrow">{% if search_query %}{{ site_copy.search_category if search_mode == 'category' else site_copy.search_text }}{% else %}{{ site_copy.project_archive_heading }}{% endif %}</p>
+  <h1>{{ page_title }}<span class="accent-period">.</span></h1>
+  {% if search_query %}<p class="intro-deck">{{ site_copy.search_hint }}</p>{% elif page_title == site_copy.project_archive_heading %}<p class="intro-deck">{{ site_copy.project_archive_intro }}</p>{% endif %}
+  {% if category_pages %}<nav class="category-pages" aria-label="{{ site_copy.category_pages_heading }}"><h2>{{ site_copy.category_pages_heading }}</h2>{% for page in category_pages %}<a class="text-link" href="/section/{{ page.slug }}">{{ page.title }}</a>{% endfor %}</nav>{% endif %}
+</section>
+{% if projects %}
+<div class="project-list archive-list pixel-box">
+  {% for project in projects %}
+  <a class="project-row {% if project.image_path %}has-image{% endif %}" href="/project/{{ project.slug }}">
+    <span class="row-index">{{ "%02d"|format(loop.index) }}</span>
+    {% if project.image_path %}<img class="project-thumb" src="{{ project.image_path }}" alt="{{ project.title }}" loading="lazy">{% endif %}
+    <span class="project-row-main"><span class="project-title">{{ project.title }}</span><span class="project-summary">{{ project.summary }}</span></span>
+    <span class="project-category">{{ project.category_name or site_copy.uncategorized }}</span>
+    <span class="row-arrow" aria-hidden="true">↗</span>
+    {% if 'zx' in project.title|lower %}<span class="zx-rainbow" aria-label="ZX Spectrum project" title="ZX Spectrum project"></span>{% endif %}
+  </a>
+  {% endfor %}
+</div>
+{% else %}<div class="empty-state"><p>{% if search_query %}{{ site_copy.search_empty }}{% else %}{{ site_copy.empty_category }}{% endif %}</p></div>{% endif %}
+{% endblock %}

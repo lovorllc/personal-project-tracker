@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }} / LOVRO.ME{% endblock %}
+{% block content %}
+<article class="reading-page pixel-box">
+  <h1>{{ section.title }}<span class="accent-period">.</span></h1>
+  <div class="article-rule"><span>{{ site_copy.section_label }}</span><span>///</span></div>
+  <div class="prose">{{ section.body }}</div>
+  {% if section.slug == 'about' %}<a class="about-settings" href="/admin"><span aria-hidden="true">⚙</span> Settings</a>{% endif %}
+  {% if projects %}
+  <section class="assigned-projects">
+    {% if section.is_dropdown %}<h2>{{ site_copy.recent_heading }}</h2>{% endif %}
+    <div class="project-list">
+      {% for project in projects %}
+      <a class="project-row {% if project.image_path %}has-image{% endif %}" href="/project/{{ project.slug }}">
+        <span class="row-index">{{ "%02d"|format(loop.index) }}</span>
+        {% if project.image_path %}<img class="project-thumb" src="{{ project.image_path }}" alt="{{ project.title }}" loading="lazy">{% endif %}
+        <span class="project-row-main"><span class="project-title">{{ project.title }}</span><span class="project-summary">{{ project.summary }}</span></span>
+        <span class="project-category">{{ project.category_name or site_copy.uncategorized }}</span>
+        <span class="row-arrow" aria-hidden="true">↗</span>
+        {% if 'zx' in project.title|lower %}<span class="zx-rainbow" aria-label="ZX Spectrum project" title="ZX Spectrum project"></span>{% endif %}
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</article>
+{% endblock %}

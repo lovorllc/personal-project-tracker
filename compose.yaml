@@ -1,0 +1,15 @@
+services:
+  web:
+    build: .
+    env_file:
+      - .env
+    environment:
+      DATABASE_PATH: /data/site.db
+    ports:
+      - "8000:8000"
+    volumes:
+      - portfolio_data:/data
+    restart: unless-stopped
+
+volumes:
+  portfolio_data:

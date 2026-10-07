@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ project.title }} / LOVRO.ME{% endblock %}
+{% block content %}
+<article class="reading-page pixel-box">
+  <a class="back-link" href="/projects"><span aria-hidden="true">←</span> {{ site_copy.back_to_projects }}</a>
+  <p class="eyebrow article-kicker">{{ site_copy.project_label }} / {{ project.category_name or site_copy.uncategorized }}</p>
+  <h1>{{ project.title }}<span class="accent-period">.</span></h1>
+  {% if 'zx' in project.title|lower %}<span class="zx-rainbow" aria-label="ZX Spectrum project" title="ZX Spectrum project"></span>{% endif %}
+  <p class="article-lede">{{ project.summary }}</p>
+  <div class="article-rule"><span>{{ site_copy.project_details }}</span><span>///</span></div>
+  <div class="prose">{{ project.body or site_copy.project_more_soon }}</div>
+  {% if project.link %}<a class="button-link" href="{{ project.link }}" target="_blank" rel="noopener noreferrer">{{ site_copy.visit_project }} <span aria-hidden="true">↗</span></a>{% endif %}
+  {% if project.image_path or gallery_images %}<div class="project-gallery" aria-label="{{ site_copy.project_gallery }}">
+    {% if project.image_path %}<button class="gallery-thumb" type="button" data-gallery-image="{{ project.image_path }}" data-gallery-alt="{{ project.title }}" aria-label="{{ site_copy.project_gallery }} 1"><img src="{{ project.image_path }}" alt="{{ project.title }}" loading="lazy"></button>{% endif %}
+    {% for image in gallery_images %}<button class="gallery-thumb" type="button" data-gallery-image="{{ image.image_path }}" data-gallery-alt="{{ project.title }} - {{ loop.index + (1 if project.image_path else 0) }}" aria-label="{{ site_copy.project_gallery }} {{ loop.index + (1 if project.image_path else 0) }}"><img src="{{ image.image_path }}" alt="{{ project.title }} - {{ loop.index + (1 if project.image_path else 0) }}" loading="lazy"></button>{% endfor %}
+  </div>{% endif %}
+</article>
+<dialog class="image-lightbox" aria-label="{{ site_copy.project_gallery }}">
+  <button class="lightbox-close" type="button" aria-label="{{ site_copy.close_gallery }}">×</button>
+  <img src="" alt="">
+</dialog>
+{% endblock %}
