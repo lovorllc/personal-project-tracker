@@ -51,7 +51,7 @@ def test_public_pages_and_hidden_admin(tmp_path, monkeypatch):
 
         about = client.get("/about")
         assert about.status_code == 200
-        assert 'href="/admin"' in about.text
+        assert 'href="/settings"' in about.text
         assert "Settings" in about.text
         assert client.get("/projects").status_code == 200
         assert client.get("/project/missing").status_code == 404

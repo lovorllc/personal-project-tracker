@@ -45,4 +45,4 @@ pip install pytest httpx
 pytest
 ```
 
-For production, use a strong unique `SESSION_SECRET`, HTTPS, unique admin credentials, and a production ASGI server configuration.
+For production, use a strong unique `SESSION_SECRET`, HTTPS, unique admin credentials, and set `COOKIE_SECURE=true`. The Compose service runs as a non-root user, persists SQLite and uploads in the `portfolio_data` volume, exposes `/healthz` for server health checks, and supports changing the host port with `PORT=8000`.

@@ -6,6 +6,8 @@ import secrets
 import sqlite3
 import io
 import uuid
+import hashlib
+import hmac
 from contextlib import asynccontextmanager, closing
 from pathlib import Path
 from typing import Any
@@ -153,6 +155,11 @@ def init_db() -> None:
                 section_id INTEGER NOT NULL REFERENCES sections(id) ON DELETE CASCADE,
                 PRIMARY KEY (project_id, section_id)
             );
+            CREATE TABLE IF NOT EXISTS admin_credentials (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                username TEXT NOT NULL,
+                password_hash TEXT NOT NULL
+            );
             """
         )
         for table, column in (
@@ -187,6 +194,14 @@ def init_db() -> None:
             "INSERT OR IGNORE INTO site_copy (key, label, text_en, text_hr) VALUES (?, ?, ?, ?)",
             SITE_COPY_DEFAULTS,
         )
+        if db.execute("SELECT 1 FROM admin_credentials WHERE id = 1").fetchone() is None:
+            configured_username = os.getenv("ADMIN_USERNAME", "")
+            configured_password = os.getenv("ADMIN_PASSWORD", "")
+            if configured_username and configured_password:
+                db.execute(
+                    "INSERT INTO admin_credentials (id, username, password_hash) VALUES (1, ?, ?)",
+                    (configured_username, hash_password(configured_password)),
+                )
         db.execute(
             "UPDATE site_copy SET label = ?, text_en = ?, text_hr = ? WHERE key = 'footer_text' AND text_en IN (?, ?)",
             ("Scrolling footer text", "Projects, ideas, and things I've made.", "Projekti, ideje i stvari koje sam izradio.", "© Lovro", "Personal projects"),
@@ -269,6 +284,9 @@ def localized(record: sqlite3.Row | dict[str, Any] | None, fields: tuple[str, ..
 
 def public_context(request: Request, **extra: Any) -> dict[str, Any]:
     language = current_language(request)
+    theme = request.session.get("theme", "retro")
+    if theme not in {"retro", "retro-light"}:
+        theme = "retro"
     section_records = rows("SELECT * FROM sections WHERE is_builtin = 0 ORDER BY title COLLATE NOCASE")
     all_sections = {section["id"]: localized(section, ("title",), language) for section in section_records}
     about_record = row("SELECT id FROM sections WHERE slug = 'about' AND is_builtin = 1")
@@ -301,6 +319,7 @@ def public_context(request: Request, **extra: Any) -> dict[str, Any]:
     return {
         "request": request,
         "language": language,
+        "theme": theme,
         "site_copy": get_site_copy(language),
         "sections": top_sections,
         **extra,
@@ -330,6 +349,19 @@ def render(request: Request, template: str, **extra: Any) -> HTMLResponse:
     )
 
 
+@app.get("/settings", response_class=HTMLResponse)
+def settings_page(request: Request) -> HTMLResponse:
+    return render(request, "settings.html", page_title="Settings")
+
+
+@app.post("/settings/theme")
+async def save_theme(request: Request) -> RedirectResponse:
+    form = await request.form()
+    theme = str(form.get("theme", "retro"))
+    request.session["theme"] = theme if theme in {"retro", "retro-light"} else "retro"
+    return RedirectResponse("/settings", status_code=303)
+
+
 def is_admin(request: Request) -> bool:
     return request.session.get("admin") is True
 
@@ -351,6 +383,29 @@ def csrf_token(request: Request) -> str:
 def valid_csrf(request: Request, submitted: str) -> bool:
     expected = request.session.get("csrf", "")
     return bool(expected) and secrets.compare_digest(expected, submitted)
+
+
+def hash_password(password: str) -> str:
+    salt = secrets.token_bytes(16)
+    digest = hashlib.scrypt(password.encode(), salt=salt, n=16384, r=8, p=1)
+    return f"scrypt${salt.hex()}${digest.hex()}"
+
+
+def verify_password(password: str, encoded: str) -> bool:
+    try:
+        algorithm, salt_hex, digest_hex = encoded.split("$", 2)
+        if algorithm != "scrypt":
+            return False
+        salt = bytes.fromhex(salt_hex)
+        expected = bytes.fromhex(digest_hex)
+        actual = hashlib.scrypt(password.encode(), salt=salt, n=16384, r=8, p=1)
+    except (ValueError, TypeError):
+        return False
+    return hmac.compare_digest(actual, expected)
+
+
+def admin_credentials() -> sqlite3.Row | None:
+    return row("SELECT username, password_hash FROM admin_credentials WHERE id = 1")
 
 
 async def save_project_image(upload: UploadFile | None) -> str | None:
@@ -411,6 +466,11 @@ def home(request: Request) -> HTMLResponse:
     language = current_language(request)
     projects = [localized(project, ("title", "summary", "body", "category_name"), language) for project in projects]
     return render(request, "home.html", projects=projects)
+
+
+@app.get("/healthz")
+def healthz() -> JSONResponse:
+    return JSONResponse({"status": "ok"})
 
 
 @app.get("/projects", response_class=HTMLResponse)
@@ -547,6 +607,7 @@ def admin_page(request: Request, saved: int = 0) -> HTMLResponse:
             "section_parents": rows(
                 "SELECT * FROM sections WHERE is_builtin = 1 OR (parent_id IS NULL AND parent_category_id IS NULL) ORDER BY is_builtin DESC, title COLLATE NOCASE"
             ),
+            "admin_username": os.getenv("ADMIN_USERNAME", ""),
         },
     )
 
@@ -676,6 +737,23 @@ async def admin_login(request: Request) -> RedirectResponse:
         csrf_token(request)
         return RedirectResponse("/admin", status_code=303)
     return RedirectResponse("/admin?error=credentials", status_code=303)
+
+
+@app.post("/admin/password")
+async def change_admin_password(request: Request) -> RedirectResponse:
+    if denied := admin_redirect(request):
+        return denied
+    form = await request.form()
+    if not valid_csrf(request, str(form.get("csrf", ""))):
+        return RedirectResponse("/admin?error=session", status_code=303)
+    new_password = str(form.get("new_password", ""))
+    confirm_password = str(form.get("confirm_password", ""))
+    if len(new_password) < 8 or new_password != confirm_password:
+        return RedirectResponse("/admin?error=password", status_code=303)
+    with closing(connect()) as db:
+        db.execute("UPDATE admin_credentials SET password_hash = ? WHERE id = 1", (hash_password(new_password),))
+        db.commit()
+    return RedirectResponse("/admin?saved=1&message=password", status_code=303)
 
 
 @app.post("/admin/logout")

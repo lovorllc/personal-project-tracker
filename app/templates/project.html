@@ -5,7 +5,6 @@
   <a class="back-link" href="/projects"><span aria-hidden="true">←</span> {{ site_copy.back_to_projects }}</a>
   <p class="eyebrow article-kicker">{{ site_copy.project_label }} / {{ project.category_name or site_copy.uncategorized }}</p>
   <h1>{{ project.title }}<span class="accent-period">.</span></h1>
-  {% if 'zx' in project.title|lower %}<span class="zx-rainbow" aria-label="ZX Spectrum project" title="ZX Spectrum project"></span>{% endif %}
   <p class="article-lede">{{ project.summary }}</p>
   <div class="article-rule"><span>{{ site_copy.project_details }}</span><span>///</span></div>
   <div class="prose">{{ project.body or site_copy.project_more_soon }}</div>

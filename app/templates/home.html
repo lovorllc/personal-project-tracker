@@ -20,7 +20,6 @@
       <span class="project-row-main"><span class="project-title">{{ project.title }}</span><span class="project-summary">{{ project.summary }}</span></span>
       <span class="project-category">{{ project.category_name or site_copy.uncategorized }}</span>
       <span class="row-arrow" aria-hidden="true">↗</span>
-      {% if 'zx' in project.title|lower %}<span class="zx-rainbow" aria-label="ZX Spectrum project" title="ZX Spectrum project"></span>{% endif %}
     </a>
     {% endfor %}
   </div>

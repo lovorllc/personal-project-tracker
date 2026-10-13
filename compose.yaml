@@ -1,15 +1,25 @@
 services:
   web:
     build: .
+    init: true
     env_file:
       - .env
     environment:
       DATABASE_PATH: /data/site.db
+      UPLOAD_DIRECTORY: /data/uploads
     ports:
-      - "8000:8000"
+      - "${PORT:-8000}:8000"
     volumes:
       - portfolio_data:/data
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
 volumes:
   portfolio_data:
