@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Settings / LOVRO.ME{% endblock %}
+{% block content %}
+<section class="settings-page pixel-box">
+  <p class="eyebrow">SITE SETTINGS</p>
+  <h1>Settings<span class="accent-period">.</span></h1>
+  <p class="intro-deck">Choose the same retro interface in a dark terminal palette or a lighter paper palette.</p>
+  <form class="theme-picker" method="post" action="/settings/theme">
+    <fieldset>
+      <legend>Theme</legend>
+      <label class="theme-option {% if theme == 'retro' %}is-selected{% endif %}">
+        <input type="radio" name="theme" value="retro" {% if theme == 'retro' %}checked{% endif %}>
+        <span><strong>Retro</strong><small>Dark terminal colors</small></span>
+      </label>
+      <label class="theme-option {% if theme == 'retro-light' %}is-selected{% endif %}">
+        <input type="radio" name="theme" value="retro-light" {% if theme == 'retro-light' %}checked{% endif %}>
+        <span><strong>Retro light</strong><small>Light paper colors</small></span>
+      </label>
+    </fieldset>
+    <button class="button-primary" type="submit">Save theme <span aria-hidden="true">↗</span></button>
+  </form>
+</section>
+{% endblock %}

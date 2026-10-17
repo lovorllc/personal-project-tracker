@@ -1,10 +1,13 @@
 services:
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: ${DOCKERHUB_IMAGE:-lovro-me/portfolio}:latest
     init: true
     env_file:
-      - .env
+      - path: .env
+        required: false
     environment:
       DATABASE_PATH: /data/site.db
       UPLOAD_DIRECTORY: /data/uploads
@@ -15,6 +18,9 @@ services:
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=3)"]
       interval: 30s

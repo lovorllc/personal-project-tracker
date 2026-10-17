@@ -13,8 +13,8 @@ from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Form, Request
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi import FastAPI, Form, HTTPException, Request
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.datastructures import UploadFile
@@ -85,7 +85,15 @@ app.add_middleware(
     https_only=os.getenv("COOKIE_SECURE", "false").lower() == "true",
 )
 app.mount("/static", StaticFiles(directory=APP_DIR / "static"), name="static")
-app.mount("/uploads", StaticFiles(directory=UPLOAD_DIRECTORY), name="uploads")
+
+
+@app.get("/uploads/{filename}")
+def uploaded_file(filename: str) -> FileResponse:
+    path = (UPLOAD_DIRECTORY / filename).resolve()
+    if path.parent != UPLOAD_DIRECTORY.resolve() or not path.is_file():
+        raise HTTPException(status_code=404)
+    return FileResponse(path, media_type="image/webp")
+
 templates = Jinja2Templates(directory=APP_DIR / "templates")
 
 
