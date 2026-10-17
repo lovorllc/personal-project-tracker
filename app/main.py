@@ -147,6 +147,10 @@ def init_db() -> None:
                 text_en TEXT NOT NULL DEFAULT '',
                 text_hr TEXT NOT NULL DEFAULT ''
             );
+            CREATE TABLE IF NOT EXISTS site_settings (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL DEFAULT ''
+            );
             CREATE TABLE IF NOT EXISTS project_images (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
@@ -324,11 +328,13 @@ def public_context(request: Request, **extra: Any) -> dict[str, Any]:
         for section in section_records
         if section["parent_id"] is None and section["parent_category_id"] is None
     ]
+    seo = {item["key"]: item["value"] for item in rows("SELECT key, value FROM site_settings")}
     return {
         "request": request,
         "language": language,
         "theme": theme,
         "site_copy": get_site_copy(language),
+        "seo": seo,
         "sections": top_sections,
         **extra,
     }
@@ -634,6 +640,42 @@ def admin_site_text(request: Request, saved: int = 0) -> HTMLResponse:
             "copy_fields": rows("SELECT * FROM site_copy ORDER BY key"),
         },
     )
+
+
+@app.get("/admin/seo", response_class=HTMLResponse)
+def admin_seo(request: Request, saved: int = 0) -> HTMLResponse:
+    if denied := admin_redirect(request):
+        return denied
+    values = {item["key"]: item["value"] for item in rows("SELECT key, value FROM site_settings")}
+    return templates.TemplateResponse(request=request, name="admin_seo.html", context={
+        "request": request, "csrf": csrf_token(request), "saved": saved, "seo": values,
+    })
+
+
+@app.post("/admin/seo/save")
+async def save_admin_seo(request: Request) -> RedirectResponse:
+    if denied := admin_redirect(request):
+        return denied
+    form = await request.form()
+    if not valid_csrf(request, str(form.get("csrf", ""))):
+        return RedirectResponse("/admin/seo?error=session", status_code=303)
+    try:
+        image_path = await save_project_image(form.get("image"))
+    except ValueError as error:
+        code = str(error)
+        return RedirectResponse(f"/admin/seo?error={code}", status_code=303)
+    old_image = None
+    with closing(connect()) as db:
+        old_image_row = db.execute("SELECT value FROM site_settings WHERE key = 'image'").fetchone()
+        old_image = old_image_row["value"] if old_image_row else None
+        description = str(form.get("description", "")).strip()[:320]
+        db.execute("INSERT INTO site_settings (key, value) VALUES ('description', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", (description,))
+        if image_path:
+            db.execute("INSERT INTO site_settings (key, value) VALUES ('image', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", (image_path,))
+        db.commit()
+    if image_path and old_image and old_image != image_path:
+        delete_project_image(old_image)
+    return RedirectResponse("/admin/seo?saved=1", status_code=303)
 
 
 @app.get("/admin/sections/structure")
