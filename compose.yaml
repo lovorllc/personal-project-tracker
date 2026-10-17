@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ${DOCKERHUB_IMAGE:-lovro-me/portfolio}:latest
+    image: ${DOCKERHUB_IMAGE:-lovorllc/porfolio}:latest
     init: true
     env_file:
       - path: .env
