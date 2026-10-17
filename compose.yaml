@@ -1,6 +1,7 @@
 services:
   web:
     build: .
+    image: ${DOCKERHUB_IMAGE:-lovro-me/portfolio}:latest
     init: true
     env_file:
       - .env

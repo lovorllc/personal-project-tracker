@@ -37,6 +37,16 @@ docker compose up --build -d
 
 Open `http://localhost:8000`. Stop it with `docker compose down`; the SQLite database persists in the `portfolio_data` volume. `docker compose down -v` also deletes that database. Do not use the local `root/root` credentials on a publicly reachable server.
 
+### Publish to Docker Hub
+
+The GitHub Actions workflow builds the image for pull requests and publishes it when code is pushed to `main`. Create a Docker Hub access token, then add these repository secrets in **Settings → Secrets and variables → Actions**:
+
+- `DOCKERHUB_USERNAME`: your Docker Hub username.
+- `DOCKERHUB_TOKEN`: the access token.
+- `DOCKERHUB_IMAGE`: the image name, such as `your-username/lovro-me`.
+
+After the workflow succeeds, set `DOCKERHUB_IMAGE` to the same `namespace/repository` value in `.env`, then run `docker compose pull` and `docker compose up -d --no-build` to use the published image. `docker compose up --build` builds the image locally from the Dockerfile instead.
+
 ## Tests
 
 ```bash
