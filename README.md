@@ -15,7 +15,7 @@ uvicorn app.main:app --reload
 
 Open `http://127.0.0.1:8000`. The admin login is at `http://127.0.0.1:8000/admin`; there is intentionally no admin link on the public site. Set `COOKIE_SECURE=true` when deploying behind HTTPS. The SQLite database is created at `data/site.db` on first startup. Set `DATABASE_PATH` to use another location.
 
-Local settings are loaded from `.env`, which is ignored by Git. This workspace is configured with `root` / `root` for local development only. Do not use these credentials on a public deployment; configure a unique `ADMIN_USERNAME`, strong `ADMIN_PASSWORD`, and random `SESSION_SECRET` in the deployment environment instead. Environment variables override values from `.env`.
+Local settings are loaded from `.env`, which is ignored by Git. Configure a random `SESSION_SECRET` there for deployment.
 
 The database starts with an editable About page and no projects or categories. After signing in, create categories, add projects, and add custom pages from the admin screen. Projects can include a short summary, details, category, and an optional external link. Public pages and project/category navigation are generated from that saved content.
 

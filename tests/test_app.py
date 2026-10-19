@@ -75,15 +75,12 @@ def test_public_pages_and_hidden_admin(tmp_path, monkeypatch):
 
 def test_admin_can_publish_dynamic_content(tmp_path, monkeypatch):
     monkeypatch.setattr(main, "DATABASE_PATH", tmp_path / "admin-test.db")
-    monkeypatch.setenv("ADMIN_USERNAME", "editor")
-    monkeypatch.setenv("ADMIN_PASSWORD", "test-password")
     with TestClient(main.app) as client:
         login_page = client.get("/admin")
-        assert "Admin credentials are not set yet" not in login_page.text
         csrf = re.search(r'name="csrf" value="([^"]+)"', login_page.text).group(1)
         response = client.post(
             "/admin/login",
-            data={"csrf": csrf, "username": "editor", "password": "test-password"},
+            data={"csrf": csrf, "username": main.ADMIN_USERNAME, "password": main.ADMIN_PASSWORD},
             follow_redirects=False,
         )
         assert response.status_code == 303

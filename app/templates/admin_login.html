@@ -4,7 +4,6 @@
   <a class="wordmark login-mark" href="/"><span class="mark" aria-hidden="true">L</span><span>LOVRO<span class="wordmark-dot">.</span>ME</span></a>
   <section class="login-panel"><h1>Admin login<span class="accent-period">.</span></h1>
     {% if error == 'credentials' %}<p class="form-error" role="alert">Those credentials did not match.</p>{% elif error == 'session' %}<p class="form-error" role="alert">Session expired. Please try again.</p>{% endif %}
-    {% if not configured %}<p class="setup-hint">Admin credentials are not set yet. Configure <code>ADMIN_USERNAME</code> and <code>ADMIN_PASSWORD</code> in your environment.</p>{% endif %}
     <form method="post" action="/admin/login" class="form-stack"><input type="hidden" name="csrf" value="{{ csrf }}"><label>Username<input name="username" autocomplete="username" required></label><label>Password<input type="password" name="password" autocomplete="current-password" required></label><button class="button-primary" type="submit">Enter admin <span aria-hidden="true">→</span></button></form>
     <a class="back-link login-back" href="/">← BACK TO SITE</a>
   </section>
