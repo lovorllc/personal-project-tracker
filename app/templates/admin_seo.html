@@ -9,7 +9,7 @@
   <div class="scanlines" aria-hidden="true"></div>
   <header class="admin-header shell"><a class="wordmark" href="/">LOVRO.ME</a><span class="admin-label">Admin</span><a class="button-quiet" href="/admin">Back to dashboard</a></header>
   <main class="shell admin-main">
-    <div class="admin-title"><div><p class="eyebrow">SEARCHh ENGINES</p><h1>Search preview<span class="accent-period">.</span></h1><p class="intro-deck">Set the text, logo, and image used when search engines or social apps preview your site.</p></div></div>
+    <div class="admin-title"><div><p class="eyebrow">SEARCHhhhhhhhhhhhh ENGINES</p><h1>Search preview<span class="accent-period">.</span></h1><p class="intro-deck">Set the text, logo, and image used when search engines or social apps preview your site.</p></div></div>
     {% if saved %}<p class="form-success" role="status">Search preview settings saved.</p>{% endif %}
     {% if request.query_params.get('error') %}<p class="form-error" role="alert">{% if request.query_params.get('error') == 'session' %}Session expired. Refresh and try again.{% else %}Image upload failed. Use a JPEG, PNG, or WebP image under 5 MB and 30 megapixels.{% endif %}</p>{% endif %}
     <form method="post" enctype="multipart/form-data" action="/admin/seo/save" class="editor-form">
