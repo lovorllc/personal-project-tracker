@@ -27,8 +27,6 @@ DATABASE_PATH = Path(os.getenv("DATABASE_PATH", BASE_DIR / "data" / "site.db"))
 UPLOAD_DIRECTORY = Path(os.getenv("UPLOAD_DIRECTORY", BASE_DIR / "data" / "uploads"))
 UPLOAD_DIRECTORY.mkdir(parents=True, exist_ok=True)
 LANGUAGES = {"en", "hr"}
-ADMIN_USERNAME = "lovoradmin"
-ADMIN_PASSWORD = "Qv7!mR2#xK9_pL4@zN6"
 SITE_COPY_DEFAULTS = (
     ("site_title", "Browser title", "Projects by Lovro", "Projekti Lovre"),
     ("home_label", "Home navigation label", "Home", "Početna"),
@@ -545,6 +543,7 @@ def admin_page(request: Request, saved: int = 0) -> HTMLResponse:
                 "request": request,
                 "csrf": csrf_token(request),
                 "error": request.query_params.get("error"),
+                "configured": bool(os.getenv("ADMIN_USERNAME") and os.getenv("ADMIN_PASSWORD")),
             },
         )
     return templates.TemplateResponse(
@@ -740,9 +739,11 @@ async def admin_login(request: Request) -> RedirectResponse:
     form = await request.form()
     if not valid_csrf(request, str(form.get("csrf", ""))):
         return RedirectResponse("/admin?error=session", status_code=303)
+    username = os.getenv("ADMIN_USERNAME", "")
+    password = os.getenv("ADMIN_PASSWORD", "")
     supplied_user = str(form.get("username", ""))
     supplied_password = str(form.get("password", ""))
-    if secrets.compare_digest(supplied_user, ADMIN_USERNAME) and secrets.compare_digest(supplied_password, ADMIN_PASSWORD):
+    if username and password and secrets.compare_digest(supplied_user, username) and secrets.compare_digest(supplied_password, password):
         request.session.clear()
         request.session["admin"] = True
         csrf_token(request)
