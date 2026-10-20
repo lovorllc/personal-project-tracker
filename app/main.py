@@ -623,20 +623,28 @@ async def save_admin_seo(request: Request) -> RedirectResponse:
         return RedirectResponse("/admin/seo?error=session", status_code=303)
     try:
         image_path = await save_project_image(form.get("image"))
+        logo_path = await save_project_image(form.get("logo"))
     except ValueError as error:
         code = str(error)
         return RedirectResponse(f"/admin/seo?error={code}", status_code=303)
     old_image = None
+    old_logo = None
     with closing(connect()) as db:
         old_image_row = db.execute("SELECT value FROM site_settings WHERE key = 'image'").fetchone()
+        old_logo_row = db.execute("SELECT value FROM site_settings WHERE key = 'logo'").fetchone()
         old_image = old_image_row["value"] if old_image_row else None
+        old_logo = old_logo_row["value"] if old_logo_row else None
         description = str(form.get("description", "")).strip()[:320]
         db.execute("INSERT INTO site_settings (key, value) VALUES ('description', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", (description,))
         if image_path:
             db.execute("INSERT INTO site_settings (key, value) VALUES ('image', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", (image_path,))
+        if logo_path:
+            db.execute("INSERT INTO site_settings (key, value) VALUES ('logo', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", (logo_path,))
         db.commit()
     if image_path and old_image and old_image != image_path:
         delete_project_image(old_image)
+    if logo_path and old_logo and old_logo != logo_path:
+        delete_project_image(old_logo)
     return RedirectResponse("/admin/seo?saved=1", status_code=303)
 
 

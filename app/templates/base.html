@@ -10,6 +10,12 @@
   <meta property="og:title" content="{% block og_title %}{{ page_title or site_copy.site_title }}{% endblock %}">
   <meta property="og:description" content="{{ seo.description or site_copy.home_intro }}">
   {% if seo.image %}<meta property="og:image" content="{{ request.base_url }}{{ seo.image.lstrip('/') }}"><meta name="twitter:card" content="summary_large_image">{% else %}<meta name="twitter:card" content="summary">{% endif %}
+  {% if seo.logo %}
+  {% set site_url = request.base_url ~ '' %}
+  {% set logo_url = site_url ~ seo.logo.lstrip('/') %}
+  <link rel="icon" href="{{ seo.logo }}" type="image/webp">
+  <script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "WebSite", "name": site_copy.site_title, "url": site_url, "publisher": {"@type": "Organization", "name": site_copy.site_title, "logo": {"@type": "ImageObject", "url": logo_url}}} | tojson }}</script>
+  {% endif %}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
