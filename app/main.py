@@ -10,6 +10,7 @@ import uuid
 from contextlib import asynccontextmanager, closing
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Form, HTTPException, Request
@@ -385,6 +386,11 @@ def valid_csrf(request: Request, submitted: str) -> bool:
     return bool(expected) and secrets.compare_digest(expected, submitted)
 
 
+def valid_contact_url(value: str) -> bool:
+    parsed = urlparse(value)
+    return parsed.scheme in {"http", "https", "mailto"} and bool(parsed.netloc or parsed.path)
+
+
 async def save_project_image(upload: UploadFile | None) -> str | None:
     if not isinstance(upload, UploadFile) or not upload.filename:
         return None
@@ -621,6 +627,11 @@ async def save_admin_seo(request: Request) -> RedirectResponse:
     form = await request.form()
     if not valid_csrf(request, str(form.get("csrf", ""))):
         return RedirectResponse("/admin/seo?error=session", status_code=303)
+    description = str(form.get("description", "")).strip()[:320]
+    contact_text = str(form.get("contact_text", "")).strip()[:80] or "Contact Me"
+    contact_url = str(form.get("contact_url", "")).strip()[:2_000]
+    if contact_url and not valid_contact_url(contact_url):
+        return RedirectResponse("/admin/seo?error=contact_url", status_code=303)
     try:
         image_path = await save_project_image(form.get("image"))
         logo_path = await save_project_image(form.get("logo"))
@@ -634,8 +645,9 @@ async def save_admin_seo(request: Request) -> RedirectResponse:
         old_logo_row = db.execute("SELECT value FROM site_settings WHERE key = 'logo'").fetchone()
         old_image = old_image_row["value"] if old_image_row else None
         old_logo = old_logo_row["value"] if old_logo_row else None
-        description = str(form.get("description", "")).strip()[:320]
         db.execute("INSERT INTO site_settings (key, value) VALUES ('description', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", (description,))
+        db.execute("INSERT INTO site_settings (key, value) VALUES ('contact_text', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", (contact_text,))
+        db.execute("INSERT INTO site_settings (key, value) VALUES ('contact_url', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", (contact_url,))
         if image_path:
             db.execute("INSERT INTO site_settings (key, value) VALUES ('image', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", (image_path,))
         if logo_path:

@@ -3,9 +3,14 @@
 {% block content %}
 <article class="reading-page pixel-box">
   <h1>{{ section.title }}<span class="accent-period">.</span></h1>
+  {% if section.slug == 'about' %}
+  <div class="about-actions">
+    <a class="about-settings" href="/settings"><span aria-hidden="true">⚙</span> Settings</a>
+    {% if seo.contact_url %}<a class="about-contact" href="{{ seo.contact_url }}"{% if seo.contact_url.startswith('http') %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ seo.contact_text or 'Contact Me' }} <span aria-hidden="true">↗</span></a>{% endif %}
+  </div>
+  {% endif %}
   <div class="article-rule"><span>{{ site_copy.section_label }}</span><span>///</span></div>
   <div class="prose">{{ section.body }}</div>
-  {% if section.slug == 'about' %}<a class="about-settings" href="/settings"><span aria-hidden="true">⚙</span> Settings</a>{% endif %}
   {% if projects %}
   <section class="assigned-projects">
     {% if section.is_dropdown %}<h2>{{ site_copy.recent_heading }}</h2>{% endif %}
