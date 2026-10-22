@@ -15,7 +15,7 @@
     <form method="post" enctype="multipart/form-data" action="/admin/seo/save" class="editor-form">
       <input type="hidden" name="csrf" value="{{ csrf }}">
       <label class="wide-field">Google result text <span class="field-note">The description shown below your site link in Google and in link previews. Google may choose other page text for some searches.</span><textarea name="description" rows="3" maxlength="320" placeholder="A short description of your site">{{ seo.description or '' }}</textarea></label>
-      <label>Contact button text <span class="field-note">Shown beside Settings on the About page</span><input name="contact_text" maxlength="80" value="{{ seo.contact_text or 'Contact Me' }}" placeholder="Contact Me"></label>
+      <label>Contact button text <span class="field-note">Shown beside Settings on the About page</span><input name="contact_text" maxlength="120" value="{{ seo.contact_text or 'Contact Me' }}" placeholder="Contact Me"></label>
       <label>Contact button URL <span class="field-note">Use https://, http://, or mailto:</span><input name="contact_url" value="{{ seo.contact_url or '' }}" placeholder="https://example.com/contact"></label>
       <label class="wide-field">Site logo <span class="field-note">JPEG, PNG, or WebP; max 5 MB. Used for the site icon and Google structured site data. A square image works best.</span><input type="file" name="logo" accept="image/jpeg,image/png,image/webp"></label>
       {% if seo.logo %}<img class="admin-image-preview" src="{{ seo.logo }}" alt="Current site logo">{% endif %}
